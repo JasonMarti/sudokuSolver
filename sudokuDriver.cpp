@@ -151,28 +151,27 @@ Board Driver::constraintSatisfactionStart(Board currentBoard, int newBoard[81])
         while (MCList->size() > 0)
         {
             LCList = new vector<Variable>;
+            //getting the list of least constraining values with [0] being the least constraining
             currentBoard.getLeastConstrainingList(MCList->operator[](0), LCList);
-            while (LCList.size() > 0)
+            while (LCList->size() > 0)
             {
-
-                if (currentBoard.forwardChecking(LCLRoot))
+                //checking the first, least constraining variable, moving to the next if it fails or creating a new board and starting the recoursion if sucessful    
+                if (currentBoard.forwardChecking(LCList->operator[](0)))
                 {
-                    currentBoard.getNewBoard(LCLRoot, newBoard);
+                    currentBoard.getNewBoard(LCList->operator[](0), newBoard);
                     Board updatedBoard(newBoard);
                     Board finalBoard = CSPRecursion(updatedBoard, found);
                     if (finalBoard.isFinished())
                     {
-                        // cout << "returns" << endl;
-                        // destroy(LCLRoot);
-                        // destroy(MCLRoot);
                         return finalBoard;
                     }
                 }
                 else
-                    LCLRoot = LCLRoot->getNext();
+                    //erase the first index
+                    LCList->erase(LCList->begin());
             }
-
-            MCLRoot = MCLRoot->getNext();
+            //erase the first index
+            MCList->erase(MCList->begin());
 
         }
     }
@@ -193,11 +192,9 @@ Board Driver::CSPRecursion(Board currentBoard, bool &found)
 
     else
     {
-        Variable *MCLRoot;
-        Variable *LCLRoot;
-        MCLRoot = currentBoard.getMostConstrainedList();
-        Variable *test;
-        test = MCLRoot;
+        vector<Variable> *MCList = new vector<Variable>;
+        vector<Variable> *LCList = new vector<Variable>;
+        currentBoard.getMostConstrainedList(MCList);
         int x, y, value;
         /*while(test != NULL)
 			{
@@ -206,89 +203,37 @@ Board Driver::CSPRecursion(Board currentBoard, bool &found)
 				test = test->getNext();
 			}*/
 
-        while (MCLRoot != NULL)
+        while (MCList->size() > 0)
         {
             //cout << "testing" << endl;
             //get the list of least constraining values for the most constrained element
-            LCLRoot = currentBoard.getLeastConstrainingList(MCLRoot);
-            while (LCLRoot != NULL)
+            currentBoard.getLeastConstrainingList(MCList->operator[](0),LCList);
+            while (LCList->size() > 0)
             {
-                //cout << "2 ";
 
-                if (currentBoard.forwardChecking(LCLRoot))
+                if (currentBoard.forwardChecking(LCList->operator[](0)))
                 {
-                    LCLRoot->getXY(x, y);
-                    LCLRoot->getValue(value);
+                    LCList->operator[](0).getXY(x, y);
+                    LCList->operator[](0).getValue(value);
 
-                    //c//out << "testing3" << endl;
-                    //cout << LCLRoot-> getConstrained() << endl;
-                    currentBoard.getNewBoard(LCLRoot, newBoard);
-                    //cout << "testing5" << endl;
-                    /*cout << "<what is in newBoard> " << endl;
-					for(int i = 0; i < 81; i++)
-					{
-						cout << newBoard[i] << " ";
-						if(i %9 == 0)
-							cout << endl;
-					}
-					cout << "<what is in newBoard/>" << endl;*/
-
+                    currentBoard.getNewBoard(LCList->operator[](0), newBoard);
                     Board updatedBoard(newBoard);
-                    //cout << "testing6" << endl;
-                    //cout << "bool" << found << endl;
-                    /*cout << endl;
-					updatedBoard.displayBoard();
-					cout << endl;*/
+
                     finalBoard = CSPRecursion(updatedBoard, found);
-                    //cout << "testing7" << endl;
+                    
                     if (finalBoard.isFinished())
                     {
-                        Variable *tnt = new Variable;
-                        // if(LCLRoot == NULL)
-                        // 	cout << "is NULL" << endl;
-                        // if(LCLRoot != NULL)
-                        // 	destroy(LCLRoot);
-                        // if(MCLRoot != NULL)
-                        // 	destroy(MCLRoot);
+                        found = true;
                         return finalBoard;
                     }
                 }
                 //cout <<"backstracking within a node" << endl;
-                LCLRoot = LCLRoot->getNext();
+                LCList->erase(LCList->begin());
             }
             //cout << "backtracking for MCLRoot" << endl;
-            MCLRoot = MCLRoot->getNext();
+            MCList->erase(LCList->begin());
         }
+
     }
 }
 
-void Driver::destroy(Variable *element)
-{
-    Variable *forwardT;
-    Variable *forwardD;
-    Variable *backwardT;
-    Variable *backwardD;
-    if (element->getNext() != NULL)
-    {
-        forwardT = element->getNext();
-        while (forwardT->getNext() != NULL)
-        {
-            forwardD = forwardT;
-            forwardT = forwardT->getNext();
-            delete forwardD;
-        }
-        delete forwardT;
-    }
-    if (element->getPrev() != NULL)
-    {
-        backwardT = element->getPrev();
-        while (backwardT->getPrev() != NULL)
-        {
-            backwardD = backwardT;
-            backwardT = backwardT->getPrev();
-            delete backwardD;
-        }
-        delete backwardT;
-    }
-    delete element;
-}

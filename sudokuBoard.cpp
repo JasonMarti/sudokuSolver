@@ -337,29 +337,30 @@ bool Board::forwardChecking(Variable LCLVar)
 	//after checking all peers and passing, returns true
 	return true;
 }
-void Board::getNewBoard(Variable *NextMove, int newBoard[81])
+void Board::getNewBoard(Variable NextMove, int newBoard[81])
 {
+	//misc support variables
 	int digit = 0;
 	int x, y = 0;
-	NextMove->getXY(x, y);
+
+	//get location of the digit to be changed
+	NextMove.getXY(x, y);
+
+	//use a for loop to populate an array that represents the current board
 	for (int i = 0; i < 9; i++)
 	{
 		for (int j = 0; j < 9; j++)
 		{
 			cells[j][i].getDigit(digit);
-			//cout << digit << " ";
 			newBoard[i * 9 + j] = digit;
 		}
-		//cout << endl;
+
 	}
-	NextMove->getValue(digit);
+	//get the digit to be changed then change it
+	NextMove.getValue(digit);
 	newBoard[y * 9 + x] = digit;
-	/*for(int i = 0; i < 81; i++)
-	{
-		cout << newBoard[i] << " ";
-		if(i%9 == 0)
-			cout << endl;
-	}*/
+
+	return; //newboard array is populated with the updated sudoku board
 }
 bool Board::isFinished()
 {

@@ -18,7 +18,7 @@ public:
 	void getMostConstrainedList(vector<Variable> *MCList);
 	void getLeastConstrainingList(Variable MCLVar, vector<Variable> *LCList);
 	bool forwardChecking(Variable LCLVar);
-	void getNewBoard(Variable* Move, int newBoard[81]);
+	void getNewBoard(Variable Move, int newBoard[81]);
 	void displayBoard();
 	int getValueOfCell(int x, int y);
 	void humanBoardUpdate(int x, int y, int digit);

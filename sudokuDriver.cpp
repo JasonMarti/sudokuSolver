@@ -29,6 +29,7 @@ void destroy(Variable*);
 
 Driver::Driver()
 {
+
     for (int i = 0; i < 81; i++)
     {
         boardArray[i] = 0;
@@ -142,15 +143,16 @@ Board Driver::constraintSatisfactionStart(Board currentBoard, int newBoard[81])
     {
         //DEBUG COMMENT REMOVE ACTIVE
         cout << "in while loop for constraintSatisfaction" << endl;
-        vector<Variable> MCList;
-        vector<Variable> LCList;
-        currentBoard.getMostConstrainedList();
+        vector<Variable> *MCList = new vector<Variable>;
+        vector<Variable> *LCList;
+        currentBoard.getMostConstrainedList(MCList);
         //DEBUG COMMENT REMOVE ACTIVE
         cout << "after getMostConstrainedList" << endl;
-        while (MCList.size() > 0)
+        while (MCList->size() > 0)
         {
-            LCLRoot = currentBoard.getLeastConstrainingList(MCLRoot);
-            while (LCLRoot != NULL)
+            LCList = new vector<Variable>;
+            currentBoard.getLeastConstrainingList(MCList->operator[](0), LCList);
+            while (LCList.size() > 0)
             {
 
                 if (currentBoard.forwardChecking(LCLRoot))

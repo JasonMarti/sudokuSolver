@@ -3,13 +3,13 @@
 #include "sudokuBoard.h"
 #include "sudokuVariable.h"
 #include <iostream>
-#include <algorithm> 
+#include <algorithm>
 #include <cstddef>
 using namespace std;
 
 Board::Board()
 {
-//doesn't need to do anything
+	//doesn't need to do anything
 }
 
 Board::Board(int board[81])
@@ -21,18 +21,18 @@ Board::Board(int board[81])
 	int tempSqY;
 	int emptyDomain[9];
 
-	for(int i = 0; i < 9; i++)
+	for (int i = 0; i < 9; i++)
 	{
 		emptyDomain[i] = 0;
 	}
-	for(int i = 0; i < 9; i++)
+	for (int i = 0; i < 9; i++)
 	{
-		for(int j = 0; j < 9; j++)
+		for (int j = 0; j < 9; j++)
 		{
 			tempIter = i * 9 + j;
 			tempSqX = j / 3;
 			tempSqY = i / 3;
-			if(board[tempIter] != 0)
+			if (board[tempIter] != 0)
 			{
 				cells[j][i].setDigit(board[tempIter]);
 				cells[j][i].setLocation(j, i, tempSqX, tempSqY);
@@ -42,52 +42,50 @@ Board::Board(int board[81])
 			{
 				cells[j][i].setLocation(j, i, tempSqX, tempSqY);
 			}
-
 		}
-		
 	}
 	//setting the rest of the domains to reflect what they should be
 	int currentX, currentY, currentSqX, currentSqY, currentDigit, currentNumbInDomain = 0;
 	int offsetX, offsetY = 0;
 
-	for(int i = 0; i < 9; i++)
+	for (int i = 0; i < 9; i++)
 	{
-		for(int j = 0; j < 9; j++)
+		for (int j = 0; j < 9; j++)
 		{
 			cells[j][i].getDigit(currentDigit);
-			if(currentDigit != 0)
+			if (currentDigit != 0)
 			{
 				cells[j][i].getLocation(currentX, currentY, currentSqX, currentSqY);
-				for(int m = 0; m < 9; m++) //for peers along the x axis
+				for (int m = 0; m < 9; m++) //for peers along the x axis
 				{
 					cells[m][currentY].getDomain(emptyDomain);
-					if(emptyDomain[currentDigit-1] == 1)
+					if (emptyDomain[currentDigit - 1] == 1)
 					{
-						emptyDomain[currentDigit-1] = 0;
+						emptyDomain[currentDigit - 1] = 0;
 					}
 					cells[m][currentY].setDomain(emptyDomain);
 				}
 
-				for(int m = 0; m < 9; m++) //for peers along the y axis
+				for (int m = 0; m < 9; m++) //for peers along the y axis
 				{
 					cells[currentX][m].getDomain(emptyDomain);
-					if(emptyDomain[currentDigit-1] == 1)
+					if (emptyDomain[currentDigit - 1] == 1)
 					{
-						emptyDomain[currentDigit-1] = 0;
+						emptyDomain[currentDigit - 1] = 0;
 					}
 					cells[currentX][m].setDomain(emptyDomain);
 				}
 
 				offsetX = currentSqX * 3;
 				offsetY = currentSqY * 3;
-				for(int m = 0; m < 3; m++) //for peers in the square
+				for (int m = 0; m < 3; m++) //for peers in the square
 				{
-					for(int n = 0; n < 3; n++)
+					for (int n = 0; n < 3; n++)
 					{
 						cells[offsetX + n][offsetY + m].getDomain(emptyDomain);
-						if(emptyDomain[currentDigit-1] == 1)
+						if (emptyDomain[currentDigit - 1] == 1)
 						{
-							emptyDomain[currentDigit-1] = 0;
+							emptyDomain[currentDigit - 1] = 0;
 						}
 						cells[offsetX + n][offsetY + m].setDomain(emptyDomain);
 					}
@@ -95,332 +93,267 @@ Board::Board(int board[81])
 			}
 		}
 	}
-	
-
 }
 
-
-void Board::getMostConstrainedList(vector<Variable> &MCList)
+void Board::getMostConstrainedList(vector<Variable> *MCList)
 {
-	Variable* makerPtr = NULL;
+	//misc support variables
+	Variable varInserter;
 	int digit = 0;
 	int constrained = 0;
 	int domain[9];
 	int debugCount = 0;
 	int debugX, debugY = 0;
 
+	//setting up variable for sort function
+	bool (Board::*comp)(Variable, Variable);
+	comp = &Board::compareVariables;
 
-	for(int i = 0; i < 9; i++)
+	for (int i = 0; i < 9; i++)
 	{
-		for(int j = 0; j < 9; j++)
+		for (int j = 0; j < 9; j++)
 		{
+			//taking each cell in the board, checks if is occupied, if not adds it to MCList
 			cells[j][i].getDigit(digit);
-			if(digit == 0)
+			if (digit == 0)
 			{
-				
-				makerPtr = new Variable;
-
+				//checks domain to find how constrained
 				cells[j][i].getDomain(domain);
-				//most constrained value has the lowest constrained value
-				for(int m = 0; m < 9; m++)
+				//most constrained variable has the lowest constrained value
+				for (int m = 0; m < 9; m++)
 				{
-					if(domain[m] == 1)
+					if (domain[m] == 1) //each cell has a 1 in the cooresponding index, eg [4] cooresponds to 5, each value that has a 1 is constrained by something
 						constrained++;
 				}
-				
-				makerPtr->setConstrained(constrained);
-				makerPtr->setXY(j, i);
+				//setting the values on the object for insertion into the vector
+				varInserter.setConstrained(constrained);
+				varInserter.setXY(j, i);
+
+				//inserting variable into the unsorted list
+				MCList->push_back(varInserter);
+
+				//reinitlize constrained for next loop
 				constrained = 0;
-
-				while(true)
-				{
-					if(MCList.size() > 0)
-					{
-						//make a pointer to the comparison function for use as a parameter in the sort function.
-						bool (Board::*comp)(Variable,Variable);
-						MCList.push_back(*makerPtr);
-						sort(MCList.begin(), MCList.end(), comp);
-
-					}
-					else
-					{
-						MCList.push_back(*makerPtr);
-					}
-				}
 			}
 		}
 	}
-/*	int x, y = 0;
-	sortPtr = rootPtr;
-	while(sortPtr != NULL)
-	{
-		sortPtr->getXY(x, y);
-		sortPtr->getValue(digit);
-		cout << "X: "<< x << " Y: " << y << " Value: " << digit << " Constrained: " << sortPtr->getConstrained() << endl;
-		sortPtr = sortPtr ->getNext();	
-	}*/
-	return rootPtr;
+	//inserting finished begin sort
+	sort(MCList->begin(), MCList->end(), comp);
 
+	return;
 }
-Variable* Board::getLeastConstrainingList(Variable* MCLVar)
+void Board::getLeastConstrainingList(Variable MCLVar, vector<Variable> *LCList)
 {
-	int x, y,digit = 0;
+	//misc supporting variables
+	int x, y, digit = 0;
 	int domain[9];
 	int tempDomain[9];
 	int constrained[9];
-	for(int i = 0; i < 9; i++)
+	for (int i = 0; i < 9; i++)
 	{
 		constrained[i] = 0;
 	}
-	MCLVar->getXY(x, y);
-	cells[x][y].getDomain(domain);
-	for(int i = 0; i < 9; i++)
+
+	MCLVar.getXY(x, y);
+	cells[x][y].getDomain(domain); //pulling domain to get potential digits
+	for (int i = 0; i < 9; i++)
 	{
+		//collecting constraints on each possible digit
+		//gets the domain for the cell, then adds a constraint tally if the value is present in the cell
+		//checking along the y axis
 		cells[x][i].getDomain(tempDomain);
-		for(int j = 0; j < 9; j++)
+		for (int j = 0; j < 9; j++)
 		{
-			if(tempDomain[j] == 1 && i != y)
-				constrained[j]++;
+			if (tempDomain[j] == 1 && i != y) //excludes the original cell, 1 means the digit is in the domain,
+				constrained[j]++;			  //if the digit is in the domain of a peer it makes setting it in the original cell more constraining so increment
 		}
+		//checking along the x axis
 		cells[i][y].getDomain(tempDomain);
-		for(int j = 0; j < 9; j++)
+		for (int j = 0; j < 9; j++)
 		{
-			if(tempDomain[j] == 1 && i != x)
-				constrained[j]++;
+			if (tempDomain[j] == 1 && i != x) //excludes the original cell, 1 means the digit is in the domain
+				constrained[j]++;			  //if the digit is in the domain of a peer it makes setting it in the original cell more constraining so increment
 		}
-
 	}
+	//checking peers in the same 3x3 grid
 	int offsetY, offsetX = 0;
-	offsetX = x / 3;
-	offsetY = y / 3;
-	for(int i = 0; i < 3; i++)
+	offsetX = x / 3; //offset to find the location of the top left corner x
+	offsetY = y / 3; //offset to find the location of the top left corner y
+	for (int i = 0; i < 3; i++)
 	{
 
-		for(int j = 0; j < 3; j++)
+		for (int j = 0; j < 3; j++)
 		{
 			cells[offsetX * 3 + j][offsetY * 3 + i].getDomain(tempDomain);
-			for(int m = 0; m <9; m++)
+			for (int m = 0; m < 9; m++)
 			{
-				if(tempDomain[m]==1)
-					constrained[m]++;
+				if (tempDomain[m] == 1)
+				{
+					if ((offsetX * 3 + j) != x && (offsetY * 3 + i) != y) //if neither is equal to original cell, count it
+					{
+						constrained[m]++;
+					}
+					else if ((offsetX * 3 + j) == x && (offsetY * 3 + i) != y) //if x is equal but y is not, count it
+					{
+						constrained[m]++;
+					}
+					else if ((offsetX * 3 + j) != x && (offsetY * 3 + i) == y) //if y is equal but x is not, count it
+					{
+						constrained[m]++;
+					}
+				}
 			}
 		}
 	}
-	Variable* sortPtr = NULL;
-	Variable* sortPtr2 = NULL;
-	Variable* rootPtr = NULL;
-	Variable* makerPtr = NULL;
-	for(int i = 0; i < 9; i++)
+	Variable varInserter;
+	for (int i = 0; i < 9; i++)
 	{
-		if(domain[i] == 1)
+		if (domain[i] == 1) //for each digit in the domain of the original cell it populates the constraints in the variable
 		{
-			constrained[i]--;
-			makerPtr = new Variable;
-			if(makerPtr != NULL && rootPtr == NULL)
-				rootPtr = makerPtr;
-			makerPtr->setXY(x, y);
-			makerPtr->setConstrained(constrained[i]);
-			makerPtr->setValue(i+1);
-			sortPtr = rootPtr;
-			if(sortPtr == makerPtr)
-			{
-				continue;
-			}
-			while(sortPtr != NULL)
-			{
-				
-				if(makerPtr->getConstrained() >= sortPtr->getConstrained())
-				{
-					
-					if(sortPtr->getNext() != NULL)
-						sortPtr = sortPtr->getNext();
-					else
-					{
-						sortPtr->setNext(makerPtr);
-						makerPtr->setPrev(sortPtr);
-						break;
-					}
-
-
-				}
-				else if(makerPtr->getConstrained() < sortPtr -> getConstrained())
-				{
-					
-					if(sortPtr->getPrev() == NULL && sortPtr->getNext() == NULL)
-					{
-						sortPtr->setPrev(makerPtr);
-						makerPtr->setNext(sortPtr);
-						rootPtr = makerPtr;
-						break;
-					}
-					else if(sortPtr->getPrev() == NULL && sortPtr->getNext() != NULL)
-					{
-						sortPtr->setPrev(makerPtr);
-						makerPtr->setNext(sortPtr);
-						rootPtr = makerPtr;
-						break;
-					}
-					else if(sortPtr->getPrev() != NULL && sortPtr->getNext() == NULL)
-					{
-						sortPtr2 = sortPtr->getPrev();
-						sortPtr2->setNext(makerPtr);
-						makerPtr->setNext(sortPtr);
-						sortPtr->setPrev(makerPtr);
-						makerPtr->setPrev(sortPtr2);
-						break; 
-					}
-					else if(sortPtr->getPrev() != NULL && sortPtr->getNext() != NULL)
-					{
-						sortPtr2 = sortPtr->getPrev();
-						sortPtr2->setNext(makerPtr);
-						makerPtr->setNext(sortPtr);
-						sortPtr->setPrev(makerPtr);
-						makerPtr->setPrev(sortPtr2);
-						break;
-					}
-				}
-			}
-
+			varInserter.setValue(i);
+			varInserter.setConstrained(constrained[i]);
+			LCList->push_back(varInserter);
 		}
-
 	}
-/*	sortPtr = rootPtr;
-	while(sortPtr != NULL)
-	{
-		sortPtr->getXY(x, y);
-		sortPtr->getValue(digit);
-		cout << "X: "<< x << " Y: " << y << " Value: " << digit << " Constrained: " << sortPtr->getConstrained() << endl;
-		sortPtr = sortPtr ->getNext();	
-	}
-*/
 
-	return rootPtr;
-
+	return;
 }
-bool Board::forwardChecking(Variable* LCLVar)
+bool Board::forwardChecking(Variable LCLVar)
 {
-	
-	int localCount, digit, x, y, offsetX, offsetY = 0;
+	//misc supporting variables
+	int numInDomain, digit, x, y, offsetX, offsetY;
 	int domain[9];
-	LCLVar ->getXY(x,y);
-	LCLVar ->getValue(digit);
+
+	//initalizing supporting variables
+	numInDomain = digit = x = y = offsetX = offsetY = 0;
+	for (int i = 0; i < 9; i++)
+	{
+		domain[i] = 0;
+	}
+	LCLVar.getXY(x, y);
+	LCLVar.getValue(digit);
 	offsetX = x / 3;
 	offsetY = y / 3;
-	//cout << "checking vert" << endl;
-	for(int i = 0; i < 9; i++)
+
+	//checking vertical peers
+	for (int i = 0; i < 9; i++)
 	{
-		
-		
+		//get the domain for each cell in the vertical peers
 		cells[x][i].getDomain(domain);
-		if(i == y)
+		if (i == y) //skip original cell
 		{
-			
 			continue;
 		}
-		
-		if(domain[digit-1] == 1)
-		{
-			//cout << "how many times" << endl;
-			for(int m = 0;m < 9; m++)
-			{
-				if(domain[m] == 1)
-				{
-					//cout << "domain[m]" << m << endl; 
-					localCount++;
-					if(localCount > 1)
-						break;
-				}
-				
-			}
-			if(!(localCount > 1))
-			{
-				//cout << "false here?1" << endl;
-				return false;
-			}
-			
-		}
-	}
-	//cout << "checking Hori" << endl;
-	for(int i = 0; i < 9; i++)
 
-	{
-		cells[i][y].getDomain(domain);
-		if(i == x)
-			continue;
-		if(domain[digit-1] == 1)
+		//check if the domain of the cell includes the digit to be set
+		if (domain[digit - 1] == 1)
 		{
-			for(int m = 0; m < 9; m++)
+			//if the domain includes it check the rest of the domain to see if it is the only item in the domain
+			for (int m = 0; m < 9; m++)
 			{
-				if(domain[m] == 1)
+				if (domain[m] == 1) //if there is something in the domain increment numInDomain
 				{
-					localCount++;
-					if(localCount > 1)
-						break;
 
-				}
-				
-			}
-			if(!(localCount > 1))
-			{
-				//cout << "false here?2" << endl;
-				return false;
-			}
-			
-		}
-	}
-
-//cout << "checkingSquare" << endl;
-	for(int i = 0; i < 3; i++)
-	{
-		for(int j = 0; j < 3; j++)
-		{
-			cells[offsetX*3 + j][offsetY*3 +i].getDomain(domain);
-			if(offsetX*3 +j == x && offsetY*3 + i==y)
-				continue;
-			if(domain[digit-1] == 1)
-			{
-				for(int m = 0; m < 9; m++)
-				{
-					if(domain[m] == 1)
+					numInDomain++;
+					if (numInDomain > 1) //if there is at least one other digit in the domain, no need to keep checking the rest
 					{
-						localCount++;
-						if(localCount > 1)
-							break;
-
+						break;
 					}
-
 				}
-				if(!(localCount > 1))
+			}
+
+			if (numInDomain == 1) //if there is only the digit in the domain forward checking fails and returns false
+			{
+				return false;
+			}
+		}
+	}
+	//reset for next set of peers
+	numInDomain = 0;
+	//checking horizontal peers
+	for (int i = 0; i < 9; i++)
+	{
+		//get the domain for each horizontal peer
+		cells[i][y].getDomain(domain);
+		if (i == x) //ignore the original
+		{
+			continue;
+		}
+
+		//check if the domain includes the digit to be set
+		if (domain[digit - 1] == 1)
+		{
+			for (int m = 0; m < 9; m++) //if any cells have the digit in the domain check if there are other digits in the domain
+			{
+				if (domain[m] == 1) //increment numInDomain for each digit in the domain
 				{
-					//cout << "false here?3" << endl;
+					numInDomain++;
+					if (numInDomain > 1) //if there is at least one other digit other than the one checking no need to continue checking
+					{
+						break;
+					}
+				}
+			}
+			if (numInDomain == 1) //if there is only the digit in the domain forward checking fails and returns false
+			{
+				return false;
+			}
+		}
+	}
+
+	//reset for next set of peers
+	numInDomain = 0;
+	//checking peers in the 3x3 square
+	for (int i = 0; i < 3; i++)
+	{
+		for (int j = 0; j < 3; j++)
+		{
+			//collecting domain for each cell
+			cells[offsetX * 3 + j][offsetY * 3 + i].getDomain(domain);
+
+
+			if (((offsetX * 3) + j) == x && ((offsetY * 3) + i) == y) //ignore the original
+				continue;
+			if (domain[digit - 1] == 1)
+			{
+				for (int m = 0; m < 9; m++)  //if any cells have the digit in the domain check if there are other digits in the domain
+				{
+					if (domain[m] == 1)		 //increment numInDomain for each digit in the domain
+					{
+						numInDomain++;
+						if (numInDomain > 1) //if there is at least one other digit other than the one checking no need to continue checking
+							break;
+					}
+				}
+				if (numInDomain == 1)		 //if there is only the digit in the domain forward checking fails and returns false 
+				{
+
 					return false;
 				}
-				
 			}
-
 		}
 	}
-	//cout << "positive Return" << endl;
-	return true;
 
+	//after checking all peers and passing, returns true
+	return true;
 }
-void Board::getNewBoard(Variable* NextMove, int newBoard[81])
+void Board::getNewBoard(Variable *NextMove, int newBoard[81])
 {
 	int digit = 0;
 	int x, y = 0;
-	NextMove->getXY(x,y);
-	for(int i = 0; i < 9; i++)
+	NextMove->getXY(x, y);
+	for (int i = 0; i < 9; i++)
 	{
-		for(int j = 0; j < 9; j++)
+		for (int j = 0; j < 9; j++)
 		{
 			cells[j][i].getDigit(digit);
 			//cout << digit << " ";
-			newBoard[i*9+j] = digit;
+			newBoard[i * 9 + j] = digit;
 		}
 		//cout << endl;
 	}
 	NextMove->getValue(digit);
-	newBoard[y*9 + x] = digit;
+	newBoard[y * 9 + x] = digit;
 	/*for(int i = 0; i < 81; i++)
 	{
 		cout << newBoard[i] << " ";
@@ -431,69 +364,67 @@ void Board::getNewBoard(Variable* NextMove, int newBoard[81])
 bool Board::isFinished()
 {
 	int digit = 0;
-	for(int i = 0; i < 9; i++)
+	for (int i = 0; i < 9; i++)
 	{
-		for(int j = 0; j < 9; j++)
+		for (int j = 0; j < 9; j++)
 		{
 			cells[j][i].getDigit(digit);
-			if(digit ==  0)
+			if (digit == 0)
 				return false;
 		}
 	}
 	int digitsX[9];
 	int digitsY[9];
 	int count = 0;
-	for(int i = 0; i < 9; i++)
+	for (int i = 0; i < 9; i++)
 	{
 		digitsX[i] = 1;
 		digitsY[i] = 1;
 	}
-	for(int i = 0; i < 9; i++)
+	for (int i = 0; i < 9; i++)
 	{
-		for(int j = 0; j < 9; j++)
+		for (int j = 0; j < 9; j++)
 		{
 			cells[j][i].getDigit(digit);
-			if(digitsX[digit-1] == 0)
+			if (digitsX[digit - 1] == 0)
 				return false;
 			else
-				digitsX[digit-1] = 0;
+				digitsX[digit - 1] = 0;
 			cells[i][j].getDigit(digit);
-			if(digitsY[digit-1] == 0)
+			if (digitsY[digit - 1] == 0)
 				return false;
 			else
-				digitsY[digit-1] = 0;
+				digitsY[digit - 1] = 0;
 		}
-		for(int n = 0; n < 9; n++)
+		for (int n = 0; n < 9; n++)
 		{
-			if(digitsX[n] == 1 || digitsY[n] == 1)
+			if (digitsX[n] == 1 || digitsY[n] == 1)
 				return false;
 			else
 			{
 				digitsX[n] = 1;
 				digitsY[n] = 1;
 			}
-
 		}
-
 	}
-	for(int i = 0; i < 3; i++)
+	for (int i = 0; i < 3; i++)
 	{
-		for(int j = 0; j < 3; j++)
+		for (int j = 0; j < 3; j++)
 		{
-			for(int m = 0; m < 3; m++)
+			for (int m = 0; m < 3; m++)
 			{
-				for(int n = 0; n < 3; n++)
+				for (int n = 0; n < 3; n++)
 				{
-					cells[j*3+n][i*3+m].getDigit(digit);
-					if(digitsX[digit-1] == 0)
+					cells[j * 3 + n][i * 3 + m].getDigit(digit);
+					if (digitsX[digit - 1] == 0)
 						return false;
 					else
-						digitsX[digit-1] = 0;
+						digitsX[digit - 1] = 0;
 				}
 			}
-			for(int m = 0; m < 9; m++)
+			for (int m = 0; m < 9; m++)
 			{
-				if(digitsX[m] == 1)
+				if (digitsX[m] == 1)
 					return false;
 				else
 					digitsX[m] = 1;
@@ -506,17 +437,16 @@ void Board::displayBoard()
 {
 	int tempdigit = 0;
 	cout << "   0 1 2 3 4 5 6 7 8" << endl;
-	for(int i = 0; i < 9; i++)
+	for (int i = 0; i < 9; i++)
 	{
-	  cout << i << " |";
-		for(int j = 0; j < 9; j++)
+		cout << i << " |";
+		for (int j = 0; j < 9; j++)
 		{
 			cells[j][i].getDigit(tempdigit);
-			if(tempdigit != 0)
-			cout << tempdigit << "|";
-			else if(tempdigit == 0)
-			  cout << " |";
-
+			if (tempdigit != 0)
+				cout << tempdigit << "|";
+			else if (tempdigit == 0)
+				cout << " |";
 		}
 		cout << endl;
 	}
@@ -524,12 +454,12 @@ void Board::displayBoard()
 int Board::countZeros()
 {
 	int digit, count = 0;
-	for(int i = 0; i < 9; i++)
+	for (int i = 0; i < 9; i++)
 	{
-		for(int j = 0; j < 9; j++)
+		for (int j = 0; j < 9; j++)
 		{
 			cells[j][i].getDigit(digit);
-			if(digit == 0)
+			if (digit == 0)
 				count++;
 		}
 	}
@@ -538,7 +468,7 @@ int Board::countZeros()
 
 void Board::humanBoardUpdate(int x, int y, int digit)
 {
-cells[x][y].setDigit(digit);
+	cells[x][y].setDigit(digit);
 }
 int Board::getValueOfCell(int x, int y)
 {
@@ -549,8 +479,12 @@ int Board::getValueOfCell(int x, int y)
 
 bool Board::compareVariables(Variable varOne, Variable varTwo)
 {
-	if(varOn.getConstrained() <= varTwo.getConstrained())
-	return true;
+	if (varOne.getConstrained() <= varTwo.getConstrained())
+	{
+		return true;
+	}
 	else
-	return false;
+	{
+		return false;
+	}
 }

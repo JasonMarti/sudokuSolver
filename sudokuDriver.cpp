@@ -174,6 +174,8 @@ Board Driver::constraintSatisfactionStart(Board currentBoard, int newBoard[81])
             MCList->erase(MCList->begin());
 
         }
+        delete LCList;
+        delete MCList; 
     }
     cout << "A solution wasn't found" << endl;
 }
@@ -231,8 +233,10 @@ Board Driver::CSPRecursion(Board currentBoard, bool &found)
                 LCList->erase(LCList->begin());
             }
             //cout << "backtracking for MCLRoot" << endl;
-            MCList->erase(LCList->begin());
+            MCList->erase(MCList->begin());
         }
+        delete LCList;
+        delete MCList;
 
     }
 }

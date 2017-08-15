@@ -137,9 +137,14 @@ void Board::getMostConstrainedList(vector<Variable> *MCList)
 			}
 		}
 	}
-	//inserting finished begin sort
-	sort(MCList->begin(), MCList->end(), comp);
 
+
+/* 	//inserting finished begin sort
+	vector<Variable> sorter;
+	sorter = *MCList;
+	sort(sorter.begin(), sorter.end(), comp);
+	delete MCList;
+	MCList = &sorter; */
 	return;
 }
 void Board::getLeastConstrainingList(Variable MCLVar, vector<Variable> *LCList)

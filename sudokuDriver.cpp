@@ -52,7 +52,7 @@ void Driver::run()
     
     //pulling input from the user
     getline(cin, rawInput);
-    difficutly = rawInput[0] - '0';
+    difficutly = atoi(rawInput.c_str());
     generatePuzzle(difficutly);
 
     //display final board
@@ -77,35 +77,29 @@ void Driver::generatePuzzle(int userChoice)
 
     fin.open("puzzles.txt");
 
-    if(!ios_base::failbit)
+    if(fin.fail())
     {
         cout << "unable to find puzzles.txt" << endl;
     } 
     int i = 0;
-    int j = 0;
     char fChar = 'a';
+    string fileInput;
     while (!fin.eof())
     {
-        j++;
-        fin.get(fChar);
-        if (count > userChoice)
+        getline(fin,fileInput);
+        if(i == userChoice)
         {
-            break;
+             
+            for(int m = 0; m < 81; m++)
+            {
+                boardArray[m] = (fileInput[m] - '0');
+            }
         }
-        else if (fChar == '\n')
+        else
         {
-            
-            cout << "count: " << count << endl; 
-            count++;
-            continue;
-        }
-        else if (count == userChoice)
-        {
-            boardArray[i] = fChar - '0';
             i++;
         }
     }
-    cout << "j: " << j << endl;
 }
 
 void Driver::humanPlaying(Board humanBoard, Board finalBoard)

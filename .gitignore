@@ -4,3 +4,4 @@ sudokuDriver.o
 sudokuVariable.o
 puzzles.txt
 sudoku
+launch.json

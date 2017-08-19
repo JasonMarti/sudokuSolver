@@ -14,7 +14,7 @@ public:
 	Board(int board[81]);
 	
 	bool isFinished();
-	bool compareVariables(Variable varOne, Variable varTwo);
+	static bool compareVariables(Variable varOne, Variable varTwo);
 	void getMostConstrainedList(vector<Variable> *MCList);
 	void getLeastConstrainingList(Variable MCLVar, vector<Variable> *LCList);
 	bool forwardChecking(Variable LCLVar);

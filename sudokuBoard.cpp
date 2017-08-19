@@ -7,6 +7,7 @@
 #include <cstddef>
 using namespace std;
 
+
 Board::Board()
 {
 	//doesn't need to do anything
@@ -106,7 +107,7 @@ void Board::getMostConstrainedList(vector<Variable> *MCList)
 	int debugX, debugY = 0;
 
 	//setting up variable for sort function
-	bool (Board::*comp)(Variable varOne, Variable varTwo);
+	bool (*comp)(Variable, Variable);
 	comp = &Board::compareVariables;
 
 	for (int i = 0; i < 9; i++)
@@ -140,8 +141,8 @@ void Board::getMostConstrainedList(vector<Variable> *MCList)
 
 
 	//inserting finished begin sort;
-	vector<Variable> &sorter = *MCList;
-	sort(sorter.begin(), sorter.end(), comp);
+ 	
+	sort(MCList->begin(), MCList->end(), comp); 
 
 }
 void Board::getLeastConstrainingList(Variable MCLVar, vector<Variable> *LCList)
@@ -482,17 +483,15 @@ int Board::getValueOfCell(int x, int y)
 	return digit;
 }
 
-bool Board::compareVariables(Variable varOne, Variable varTwo)
+bool Board::compareVariables(Variable var1, Variable var2)
 {
-	int constrained1, constrained2;
-	constrained1 = varOne.getConstrained();
-	constrained2 = varTwo.getConstrained();
-	if (varOne.getConstrained() <= varTwo.getConstrained())
+	if (var1.getConstrained() > var2.getConstrained())
 	{
-		return true;
+	  return true;
 	}
 	else
 	{
-		return false;
+	  return false;
 	}
+  
 }

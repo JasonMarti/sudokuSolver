@@ -95,12 +95,14 @@ bool Driver::generatePuzzle(int userChoice)
     while (!fin.eof())
     {
         getline(fin, fileInput);
+        cout << "fileInput '" << fileInput << "'" << endl; 
         if (i == userChoice)
         {
             for (int m = 0; m < 81; m++)
             {
                 boardArray[m] = (fileInput[m] - '0');
             }
+            break;
         }
         else
         {

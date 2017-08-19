@@ -106,7 +106,7 @@ void Board::getMostConstrainedList(vector<Variable> *MCList)
 	int debugX, debugY = 0;
 
 	//setting up variable for sort function
-	bool (Board::*comp)(Variable, Variable);
+	bool (Board::*comp)(Variable varOne, Variable varTwo);
 	comp = &Board::compareVariables;
 
 	for (int i = 0; i < 9; i++)
@@ -139,13 +139,10 @@ void Board::getMostConstrainedList(vector<Variable> *MCList)
 	}
 
 
-/* 	//inserting finished begin sort
-	vector<Variable> sorter;
-	sorter = *MCList;
+	//inserting finished begin sort;
+	vector<Variable> &sorter = *MCList;
 	sort(sorter.begin(), sorter.end(), comp);
-	delete MCList;
-	MCList = &sorter; */
-	return;
+
 }
 void Board::getLeastConstrainingList(Variable MCLVar, vector<Variable> *LCList)
 {
@@ -350,6 +347,7 @@ void Board::getNewBoard(Variable NextMove, int newBoard[81])
 
 	//get location of the digit to be changed
 	NextMove.getXY(x, y);
+	cout << "board::nextMove.getxy: x:y " << x << ":" << y << endl; 
 
 	//use a for loop to populate an array that represents the current board
 	for (int i = 0; i < 9; i++)
@@ -363,6 +361,7 @@ void Board::getNewBoard(Variable NextMove, int newBoard[81])
 	}
 	//get the digit to be changed then change it
 	NextMove.getValue(digit);
+	cout << "board::getnewBoard getvalue.getValue(digit) digit: " << digit << endl;
 	newBoard[y * 9 + x] = digit;
 
 	return; //newboard array is populated with the updated sudoku board
@@ -485,6 +484,9 @@ int Board::getValueOfCell(int x, int y)
 
 bool Board::compareVariables(Variable varOne, Variable varTwo)
 {
+	int constrained1, constrained2;
+	constrained1 = varOne.getConstrained();
+	constrained2 = varTwo.getConstrained();
 	if (varOne.getConstrained() <= varTwo.getConstrained())
 	{
 		return true;

@@ -13,7 +13,8 @@ void run();
 protected:
 
 //member functions
-void generatePuzzle(int userChoice);
+int debug;
+bool generatePuzzle(int userChoice);
 Board CSPRecursion(Board, bool& found);
 Board constraintSatisfactionStart(Board currentBoard, int newBoard[81]);
 void humanPlaying(Board, Board);

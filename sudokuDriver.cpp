@@ -95,7 +95,7 @@ bool Driver::generatePuzzle(int userChoice)
     while (!fin.eof())
     {
         getline(fin, fileInput);
-        cout << "fileInput '" << fileInput << "'" << endl; 
+        cout << "fileInput '" << fileInput << "'" << endl;
         if (i == userChoice)
         {
             for (int m = 0; m < 81; m++)
@@ -145,27 +145,12 @@ Board Driver::constraintSatisfactionStart(Board currentBoard, int newBoard[81])
     bool found = false;
     while (!currentBoard.isFinished() && !found)
     {
-        //DEBUG COMMENT REMOVE ACTIVE
-        cout << "in while loop for constraintSatisfaction" << endl;
         vector<Variable> *MCList = new vector<Variable>;
         vector<Variable> *LCList;
         currentBoard.getMostConstrainedList(MCList);
-        //DEBUG COMMENT REMOVE ACTIVE
-        cout << "after getMostConstrainedList" << endl;
         int debugx, debugy;
         debugx = debugy = 0;
-        cout << "MCList->size()" << MCList->size();
-        cout << endl;
-        MCList->operator[](0).getXY(debugx, debugy);
-        cout << "x" << debugx << "y" << debugy << " | ";
-        cout << endl;
-        for (unsigned int i = 0; i < MCList->size(); i++)
-        {
-            MCList->operator[](i).getXY(debugx, debugy);
-            cout << "x" << debugx << "y" << debugy << " | ";
-            if((i+1) % 9 == 0)
-            cout << endl;
-        }
+
         while (MCList->size() > 0)
         {
             LCList = new vector<Variable>;
@@ -173,17 +158,12 @@ Board Driver::constraintSatisfactionStart(Board currentBoard, int newBoard[81])
             currentBoard.getLeastConstrainingList(MCList->operator[](0), LCList);
             while (LCList->size() > 0)
             {
-                for (unsigned int i = 0; i < LCList->size(); i++)
-                {
-                    LCList->operator[](i).getValue(debugx);
-                    cout << "value" << debugx << endl;
-                }
                 //checking the first, least constraining variable, moving to the next if it fails or creating a new board and starting the recoursion if sucessful
                 if (currentBoard.forwardChecking(LCList->operator[](0)))
                 {
-                    cout << "forward checking passed" << endl;
                     currentBoard.getNewBoard(LCList->operator[](0), newBoard);
                     Board updatedBoard(newBoard);
+                    updatedBoard.displayBoard();
                     Board finalBoard = CSPRecursion(updatedBoard, found);
                     if (finalBoard.isFinished() || found)
                     {
@@ -206,17 +186,15 @@ Board Driver::constraintSatisfactionStart(Board currentBoard, int newBoard[81])
 
 Board Driver::CSPRecursion(Board currentBoard, bool &found)
 {
-    cout << "\nonce around the merry-go round" << endl;
+
     Board finalBoard;
-    //cout << "does it get to here" << endl;
     int newBoard[81];
 
-    cout << "debug: " << debug << endl;
+    cout << "iterations: " << debug << endl;
+    currentBoard.displayBoard();
     debug++;
-    if (found == true || currentBoard.isFinished())
+    if (currentBoard.isFinished())
     {
-        cout << "did it make it this far" << endl;
-        //found = true;
         return currentBoard;
     }
 
@@ -224,42 +202,24 @@ Board Driver::CSPRecursion(Board currentBoard, bool &found)
     {
         vector<Variable> *MCList = new vector<Variable>;
         vector<Variable> *LCList;
-        cout << "before getMostConstrainedList" << endl;
-        currentBoard.displayBoard();
         currentBoard.getMostConstrainedList(MCList);
         int x, y, value;
-        /*while(test != NULL)
-			{
-				test->getXY(x, y);
-				cout << "X: " << x << " Y: " << y << endl;
-				test = test->getNext();
-			}*/
-
         while (MCList->size() > 0)
         {
             LCList = new vector<Variable>;
-            cout << "after getMostConstrainedList" << endl;
             //get the list of least constraining values for the most constrained element
             currentBoard.getLeastConstrainingList(MCList->operator[](0), LCList);
-            cout << "after getLeastConstraingList" << endl;
             while (LCList->size() > 0)
             {
-                cout << "before forward checking" << endl;
                 if (currentBoard.forwardChecking(LCList->operator[](0)))
                 {
-                    cout << "after forward checking" << endl;
                     LCList->operator[](0).getXY(x, y);
                     LCList->operator[](0).getValue(value);
 
-                    cout << "after LCList->operator" << endl;
                     currentBoard.getNewBoard(LCList->operator[](0), newBoard);
                     Board updatedBoard(newBoard);
-                    cout << "after updating board" << endl;
 
-                    //finalBoard = CSPRecursion(updatedBoard, found);
-                    found = true;
-                    return updatedBoard;
-                    cout << "after updating board" << endl;
+                    finalBoard = CSPRecursion(updatedBoard, found);
                     if (finalBoard.isFinished())
                     {
                         found = true;
@@ -271,14 +231,22 @@ Board Driver::CSPRecursion(Board currentBoard, bool &found)
                     }
                 }
                 //cout <<"backstracking within a node" << endl;
+                if(LCList->size() > 0)
                 LCList->erase(LCList->begin());
             }
             delete LCList;
             //cout << "backtracking for MCLRoot" << endl;
+            if(MCList->size() > 0)
             MCList->erase(MCList->begin());
         }
         if (LCList != NULL)
-            delete LCList;
+        delete LCList;
+        if (MCList != NULL)
         delete MCList;
     }
+    if(!finalBoard.isFinished())
+    {
+        cout << "unable to find a solution" << endl;
+    }
+
 }

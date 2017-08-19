@@ -5,3 +5,4 @@ sudokuVariable.o
 puzzles.txt
 sudoku
 launch.json
+.vscode/settings.json

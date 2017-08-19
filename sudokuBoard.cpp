@@ -213,8 +213,9 @@ void Board::getLeastConstrainingList(Variable MCLVar, vector<Variable> *LCList)
 	{
 		if (domain[i] == 1) //for each digit in the domain of the original cell it populates the constraints in the variable
 		{
-			varInserter.setValue(i);
+			varInserter.setValue(i); //value starts at 0 where digits start at 1
 			varInserter.setConstrained(constrained[i]);
+			varInserter.setXY(x,y);
 			LCList->push_back(varInserter);
 		}
 	}
@@ -235,6 +236,7 @@ bool Board::forwardChecking(Variable LCLVar)
 	}
 	LCLVar.getXY(x, y);
 	LCLVar.getValue(digit);
+	digit++;
 	offsetX = x / 3;
 	offsetY = y / 3;
 
@@ -348,7 +350,6 @@ void Board::getNewBoard(Variable NextMove, int newBoard[81])
 
 	//get location of the digit to be changed
 	NextMove.getXY(x, y);
-	cout << "board::nextMove.getxy: x:y " << x << ":" << y << endl; 
 
 	//use a for loop to populate an array that represents the current board
 	for (int i = 0; i < 9; i++)
@@ -362,7 +363,7 @@ void Board::getNewBoard(Variable NextMove, int newBoard[81])
 	}
 	//get the digit to be changed then change it
 	NextMove.getValue(digit);
-	cout << "board::getnewBoard getvalue.getValue(digit) digit: " << digit << endl;
+	digit++; //to correct for the difference between value and number on the board
 	newBoard[y * 9 + x] = digit;
 
 	return; //newboard array is populated with the updated sudoku board
@@ -485,7 +486,7 @@ int Board::getValueOfCell(int x, int y)
 
 bool Board::compareVariables(Variable var1, Variable var2)
 {
-	if (var1.getConstrained() > var2.getConstrained())
+	if (var1.getConstrained() < var2.getConstrained())
 	{
 	  return true;
 	}

@@ -74,7 +74,7 @@ void Driver::run()
     //find correct board positions
     finalBoard = constraintSatisfactionStart(board, boardArray);
     finalBoard.displayBoard();
-    //humanPlaying(board, finalBoard);
+    humanPlaying(board, finalBoard);
 }
 
 bool Driver::generatePuzzle(int userChoice)
@@ -114,21 +114,64 @@ bool Driver::generatePuzzle(int userChoice)
 
 void Driver::humanPlaying(Board humanBoard, Board finalBoard)
 {
-    cout << "Begin." << endl;
-    int x, y, digit = -1;
-    char input, input1, input2;
+    cout << "\n\nStarting." << endl;
+    int x, y, digit, i;
+    x = y = digit = -1;
+    i = 0;
+    char *charPtr;
+    bool goodInput;
+    string userInput = "";
     while (!humanBoard.isFinished())
     {
         humanBoard.displayBoard();
-        cout << "please enter your choice in the form <x> <enter> <y> <enter> <digit> <enter>" << endl;
-        cin >> input;
-        cin >> input1;
-        cin >> input2;
-        x = input - '0';
-        y = input1 - '0';
-        digit = input2 - '0';
-        //cout << "before segfault" << endl;
-        if (finalBoard.getValueOfCell(x, y) != digit)
+        while (true)
+        {
+            cout << "Please enter coordinates and digit as <x> <y> <digit>\n>:";
+            getline(cin, userInput);
+
+            while (userInput[i] != '\0')
+            {
+                if (x < 0 && (userInput[i] <= '9' && userInput[i] >= '0'))
+                {
+                    x = userInput[i] - '0';
+                    i++;
+                }
+                else if (y < 0 && (userInput[i] <= '9' && userInput[i] >= '0'))
+                {
+                    y = userInput[i] - '0';
+                    i++;
+                }
+                else if (digit < 0 && (userInput[i] <= '9' && userInput[i] >= '0'))
+                {
+                    digit = userInput[i] - '0';
+                    if (x >= 0 && y >= 0 && digit > 0)
+                    {
+                        goodInput = true;
+                        break;
+                    }
+                    i++;
+                }
+                else
+                {
+                    i++;
+                    continue;
+                }
+            }
+            if (!goodInput)
+            {
+                cout << "not good input " << endl;
+            }
+            else if (goodInput)
+            {
+                break;
+            }
+        }
+        goodInput = false;
+
+        cout << "humanBoard.getVal" << endl;
+        if (humanBoard.getValueOfCell(x, y) != 0)
+            cout << "That spot is already taken" << endl;
+        else if (finalBoard.getValueOfCell(x, y) != digit)
         {
             //	cout << "after segfault" << endl;
             cout << "That move eventually violates a constraint." << endl;
@@ -136,8 +179,9 @@ void Driver::humanPlaying(Board humanBoard, Board finalBoard)
         }
         else if (finalBoard.getValueOfCell(x, y) == digit && humanBoard.getValueOfCell(x, y) == 0)
             humanBoard.humanBoardUpdate(x, y, digit);
-        else if (humanBoard.getValueOfCell(x, y) != 0)
-            cout << "That spot is already taken" << endl;
+
+        x = y = digit = -1;
+        i = 0;
     }
 }
 Board Driver::constraintSatisfactionStart(Board currentBoard, int newBoard[81])
@@ -182,6 +226,7 @@ Board Driver::constraintSatisfactionStart(Board currentBoard, int newBoard[81])
         delete MCList;
     }
     cout << "A solution wasn't found" << endl;
+    return currentBoard;
 }
 
 Board Driver::CSPRecursion(Board currentBoard, bool &found)
@@ -189,9 +234,6 @@ Board Driver::CSPRecursion(Board currentBoard, bool &found)
 
     Board finalBoard;
     int newBoard[81];
-
-    cout << "iterations: " << debug << endl;
-    currentBoard.displayBoard();
     debug++;
     if (currentBoard.isFinished())
     {
@@ -231,22 +273,21 @@ Board Driver::CSPRecursion(Board currentBoard, bool &found)
                     }
                 }
                 //cout <<"backstracking within a node" << endl;
-                if(LCList->size() > 0)
-                LCList->erase(LCList->begin());
+                if (LCList->size() > 0)
+                    LCList->erase(LCList->begin());
             }
             delete LCList;
             //cout << "backtracking for MCLRoot" << endl;
-            if(MCList->size() > 0)
-            MCList->erase(MCList->begin());
+            if (MCList->size() > 0)
+                MCList->erase(MCList->begin());
         }
         if (LCList != NULL)
-        delete LCList;
+            delete LCList;
         if (MCList != NULL)
-        delete MCList;
+            delete MCList;
     }
-    if(!finalBoard.isFinished())
+    if (!finalBoard.isFinished())
     {
         cout << "unable to find a solution" << endl;
     }
-
 }
